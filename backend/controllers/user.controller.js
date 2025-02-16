@@ -33,7 +33,6 @@ module.exports.registerUser = async (req, res, next) => {
         return res.status(201).json({ token: token, uesr: user });
 
     } catch (error) {
-        console.log(error)
         return res.status(400).json({ message: "error occured" })
     }
 }
@@ -61,7 +60,6 @@ module.exports.loginUser = async (req, res) => {
         return res.status(200).json({ success: "ok", token: token });
 
     } catch (error) {
-        console.log(error)
         return res.status(400).json({ error: error })
     }
 }
