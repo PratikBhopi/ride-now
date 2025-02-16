@@ -1,7 +1,10 @@
 const { validationResult } = require('express-validator')
 const userService = require('../services/user.service');
 const userModel = require('../models/user.model');
-
+const blackListToken = require('../models/blacklistToken.model');
+const jwt = require('jsonwebtoken');
+const dotenv=require('dotenv')
+dotenv.config();
 
 module.exports.registerUser = async (req, res, next) => {
     try {
@@ -26,6 +29,7 @@ module.exports.registerUser = async (req, res, next) => {
         })
 
         const token = user.generateAuthToken();
+        res.cookie('token',token)
         return res.status(201).json({ token: token, uesr: user });
 
     } catch (error) {
@@ -53,9 +57,8 @@ module.exports.loginUser = async (req, res) => {
         }
 
         const token = user.generateAuthToken();
-
-        return res.status(200).json({ success: "ok", token: token })
-
+        res.cookie('token',token);
+        return res.status(200).json({ success: "ok", token: token });
 
     } catch (error) {
         console.log(error)
@@ -66,4 +69,15 @@ module.exports.loginUser = async (req, res) => {
 
 module.exports.getUserProfile= async (req,res)=>{
     return res.status(200).json({user:req.user})
+}
+
+
+module.exports.logoutUser=async(req,res)=>{
+    res.clearCookie('token');
+    const token = req.cookies.token || req.headers.authorization.split(' ')[ 1 ];
+    const decoded=jwt.verify(token,process.env.JWT_SECRET_KEY)
+    const expiresAt = new Date(decoded.exp * 1000); // Convert to Date format
+    await blackListToken.create({ token ,expiresAt});
+    
+    return res.status(200).json({message:'Logged Out'});
 }
